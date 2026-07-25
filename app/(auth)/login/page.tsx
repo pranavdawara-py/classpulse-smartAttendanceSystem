@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured, supabaseSetupMessage } from "@/lib/supabase/config";
 
@@ -261,11 +262,12 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p style={{
-            textAlign: "center", marginTop: 24,
-            fontSize: ".83rem", color: "#94a3b8"
-          }}>
-            Contact your school administrator for account access.
+          <p style={{ textAlign: "center", marginTop: 24, fontSize: ".83rem", color: "#94a3b8" }}>
+            New school?{" "}
+            <Link href="/signup" style={{ color: "#6d4aff", fontWeight: 700, textDecoration: "none" }}>Register your school</Link>
+          </p>
+          <p style={{ textAlign: "center", marginTop: 8, fontSize: ".83rem", color: "#94a3b8" }}>
+            Teachers and students: contact your school administrator for access.
           </p>
         </div>
       </div>

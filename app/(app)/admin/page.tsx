@@ -130,8 +130,8 @@ function SetupCard({
     status === "done"
       ? { background: "#ecfdf5", color: "#065f46", label: "Done ✓" }
       : status === "active"
-      ? { background: "#eff6ff", color: "#1d4ed8", label: "In progress" }
-      : { background: "#f8fafc", color: "#64748b", label: "Coming soon" };
+        ? { background: "#eff6ff", color: "#1d4ed8", label: "In progress" }
+        : { background: "#f8fafc", color: "#64748b", label: "Coming soon" };
 
   return (
     <div className="card" style={{ padding: "24px 22px", opacity: status === "coming-soon" ? .7 : 1 }}>

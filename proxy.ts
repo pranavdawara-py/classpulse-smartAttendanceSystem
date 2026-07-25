@@ -4,7 +4,7 @@ import { createMiddlewareClient } from "@/lib/supabase/middleware";
 // Routes that require authentication.
 const PROTECTED_PREFIXES = ["/admin", "/teacher", "/student", "/dashboard"];
 // Routes only for unauthenticated users; redirect away if already signed in.
-const AUTH_ONLY_PATHS = ["/login"];
+const AUTH_ONLY_PATHS = ["/login", "/signup"];
 
 export async function middleware(request: NextRequest) {
   const { supabase, response } = createMiddlewareClient(request);
