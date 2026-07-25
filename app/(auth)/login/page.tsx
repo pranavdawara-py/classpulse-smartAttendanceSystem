@@ -53,6 +53,15 @@ export default function LoginPage() {
 
   const configured = isSupabaseConfigured();
 
+  // Show errors passed from auth callback (e.g. expired link, bootstrap failure)
+  const callbackError = searchParams.get("error");
+  const callbackErrorMsg: Record<string, string> = {
+    link_expired: "Your verification link has expired. Please sign up again.",
+    invalid_link: "Invalid verification link. Please try again.",
+    bootstrap_failed: "School setup failed after verification. Please contact support.",
+    not_configured: "Server configuration error. Please contact support."
+  };
+
   // Reset error when inputs change
   useEffect(() => { setError(null); }, [email, password]);
 
@@ -193,7 +202,14 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Error */}
+          {/* Callback error (from email verification redirect) */}
+          {callbackError && callbackErrorMsg[callbackError] && (
+            <div className="alert alert-error" style={{ marginBottom: 20 }} role="alert">
+              {callbackErrorMsg[callbackError]}
+            </div>
+          )}
+
+          {/* Sign-in error */}
           {error && (
             <div className="alert alert-error" style={{ marginBottom: 20 }} role="alert">
               {error}
