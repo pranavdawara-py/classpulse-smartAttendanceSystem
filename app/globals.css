@@ -2,7 +2,7 @@
 
 :root { --ink:#172033; --muted:#64748b; --surface:#ffffff; --line:#e7edf5; --violet:#6d4aff; --pink:#ff4f88; --mint:#28c7a2; --amber:#ffb648; }
 * { box-sizing: border-box; }
-body { margin:0; background:#f7f8fc; color:var(--ink); font-family:Arial, Helvetica, sans-serif; }
+body { margin:0; background:#f7f8fc; color:var(--ink); font-family:var(--font-inter, Arial, Helvetica, sans-serif); }
 button, input, select { font:inherit; }
 .shell { min-height:100vh; background:radial-gradient(circle at 92% 0%,#e5dcff 0,transparent 28rem),#f7f8fc; }
 .nav { border-bottom:1px solid var(--line); background:rgba(255,255,255,.88); backdrop-filter:blur(12px); }
