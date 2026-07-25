@@ -6,6 +6,7 @@ node_modules/
 !.env.example
 /skills/
 /backend/
+supabase/.temp/
 *.tsbuildinfo
 __pycache__/
 .pytest_cache/
