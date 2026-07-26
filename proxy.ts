@@ -6,7 +6,7 @@ const PROTECTED_PREFIXES = ["/admin", "/teacher", "/student", "/dashboard"];
 // Routes only for unauthenticated users; redirect away if already signed in.
 const AUTH_ONLY_PATHS = ["/login", "/signup"];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { supabase, response } = createMiddlewareClient(request);
   const path = request.nextUrl.pathname;
 
