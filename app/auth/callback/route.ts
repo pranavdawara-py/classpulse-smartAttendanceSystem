@@ -39,20 +39,30 @@ export async function GET(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (user?.user_metadata?.school_name) {
-    // School signup path — bootstrap the institution.
-    // bootstrap_institution() is a security-definer RPC that:
-    //   1. Creates the institution row
-    //   2. Updates the profile to role='admin' + institution_id
-    // It's idempotent against double-calls (raises if already assigned).
+    const schoolName = user.user_metadata.school_name as string;
+    const schoolTimezone = (user.user_metadata.school_timezone as string) ?? "Asia/Kolkata";
+    const schoolCountry = (user.user_metadata.school_country as string) ?? "";
+    const schoolState   = (user.user_metadata.school_state   as string) ?? "";
+    const schoolCity    = (user.user_metadata.school_city    as string) ?? "";
+
+    // Create institution + set admin role
     const { error: rpcError } = await supabase.rpc("bootstrap_institution", {
-      institution_name: user.user_metadata.school_name as string,
-      institution_timezone: (user.user_metadata.school_timezone as string) ?? "Asia/Kolkata"
+      institution_name: schoolName,
+      institution_timezone: schoolTimezone
     });
 
     if (rpcError && !rpcError.message.includes("already assigned")) {
-      // Unexpected error during bootstrap. Log and redirect to an error state.
       console.error("[auth/callback] bootstrap_institution error:", rpcError.message);
       return NextResponse.redirect(`${origin}/login?error=bootstrap_failed`);
+    }
+
+    // Set location if provided (optional fields — ignore errors)
+    if (schoolCountry || schoolState || schoolCity) {
+      await supabase.rpc("set_institution_location", {
+        p_country: schoolCountry,
+        p_state:   schoolState,
+        p_city:    schoolCity
+      });
     }
   }
 

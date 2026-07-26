@@ -26,12 +26,15 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [schoolName, setSchoolName] = useState("");
+  const [country, setCountry] = useState("");
+  const [state, setState] = useState("");
+  const [city, setCity] = useState("");
   const [timezone, setTimezone] = useState("Asia/Kolkata");
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => { setError(null); }, [email, password, confirmPassword, schoolName]);
+  useEffect(() => { setError(null); }, [email, password, confirmPassword, schoolName, country, state, city]);
 
   // ── Step 1 → Step 2: purely UI, no API call ──────────────────────────────
   function handleAccountNext(e: React.FormEvent) {
@@ -59,9 +62,11 @@ export default function SignupPage() {
         options: {
           data: {
             school_name: schoolName.trim(),
-            school_timezone: timezone
+            school_timezone: timezone,
+            school_country: country.trim(),
+            school_state: state.trim(),
+            school_city: city.trim()
           },
-          // Supabase sends the confirmation link; callback bootstraps the school.
           emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
@@ -168,18 +173,34 @@ export default function SignupPage() {
             </>
           )}
 
-          {/* ── STEP 2: School details ── */}
           {step === "school" && (
             <>
-              <h2 style={{ fontSize: "1.4rem", fontWeight: 800, marginBottom: 4 }}>Name your school</h2>
+              <h2 style={{ fontSize: "1.4rem", fontWeight: 800, marginBottom: 4 }}>Set up your school</h2>
               <p style={{ color: "#64748b", fontSize: ".9rem", marginBottom: 24 }}>
                 We&apos;ll send a verification link to <strong>{email}</strong> after this step.
               </p>
               <form onSubmit={handleSchoolSubmit} noValidate>
                 <div className="field" style={{ marginBottom: 14 }}>
-                  <label htmlFor="signup-school-name">School / institution name</label>
+                  <label htmlFor="signup-school-name">School / institution name <span style={{ color: "#ff4f88" }}>*</span></label>
                   <input id="signup-school-name" type="text" required placeholder="e.g. Sunrise Public School" value={schoolName} onChange={e => setSchoolName(e.target.value)} disabled={loading} autoFocus />
                 </div>
+
+                {/* Location — free text, no validation */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
+                  <div className="field">
+                    <label htmlFor="signup-country">Country</label>
+                    <input id="signup-country" type="text" placeholder="e.g. India" value={country} onChange={e => setCountry(e.target.value)} disabled={loading} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="signup-state">State / Province</label>
+                    <input id="signup-state" type="text" placeholder="e.g. Maharashtra" value={state} onChange={e => setState(e.target.value)} disabled={loading} />
+                  </div>
+                </div>
+                <div className="field" style={{ marginBottom: 14 }}>
+                  <label htmlFor="signup-city">City</label>
+                  <input id="signup-city" type="text" placeholder="e.g. Pune" value={city} onChange={e => setCity(e.target.value)} disabled={loading} />
+                </div>
+
                 <div className="field" style={{ marginBottom: 28 }}>
                   <label htmlFor="signup-timezone">Timezone</label>
                   <select id="signup-timezone" value={timezone} onChange={e => setTimezone(e.target.value)} disabled={loading} style={{ minHeight: 46, border: "1px solid #dbe3ef", borderRadius: 12, padding: "0 13px", outline: "none", background: "#fff", width: "100%" }}>

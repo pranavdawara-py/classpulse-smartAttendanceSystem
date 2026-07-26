@@ -3,8 +3,8 @@ import { createMiddlewareClient } from "@/lib/supabase/middleware";
 
 // Routes that require authentication.
 const PROTECTED_PREFIXES = ["/admin", "/teacher", "/student", "/dashboard"];
-// Routes only for unauthenticated users; redirect away if already signed in.
-const AUTH_ONLY_PATHS = ["/login", "/signup"];
+// Route prefixes only for unauthenticated users — redirect logged-in users to /dashboard.
+const AUTH_ONLY_PREFIXES = ["/login", "/signup"];
 
 export async function proxy(request: NextRequest) {
   const { supabase, response } = createMiddlewareClient(request);
@@ -19,7 +19,7 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isProtected = PROTECTED_PREFIXES.some((p) => path.startsWith(p));
-  const isAuthOnly = AUTH_ONLY_PATHS.includes(path);
+  const isAuthOnly = AUTH_ONLY_PREFIXES.some((p) => path.startsWith(p));
 
   if (isProtected && !user) {
     const loginUrl = new URL("/login", request.url);
