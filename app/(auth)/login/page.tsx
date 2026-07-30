@@ -70,10 +70,10 @@ export default function LoginPickerPage() {
             </span>
           </div>
           <h1 style={{ color: "white", fontSize: "1.5rem", fontWeight: 800, marginBottom: 8 }}>
-            Welcome back
+            Welcome
           </h1>
           <p style={{ color: "rgba(255,255,255,.55)", fontSize: ".95rem" }}>
-            Who are you signing in as?
+            Sign in or just start taking attendance
           </p>
         </div>
 
@@ -119,6 +119,44 @@ export default function LoginPickerPage() {
             </Link>
           ))}
         </div>
+
+        {/* Personal Mode — no sign-in needed */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "24px 0 12px" }}>
+          <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,.1)" }} />
+          <span style={{ color: "rgba(255,255,255,.3)", fontSize: ".78rem", fontWeight: 700, whiteSpace: "nowrap" }}>or, no sign-in needed</span>
+          <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,.1)" }} />
+        </div>
+
+        <Link
+          href="/attend"
+          id="login-role-personal"
+          className="role-card"
+          style={{
+            display: "flex", alignItems: "center", gap: 18,
+            background: "rgba(245,158,11,.1)",
+            border: "1px solid rgba(245,158,11,.35)",
+            borderRadius: 20, padding: "20px 22px",
+            textDecoration: "none",
+            backdropFilter: "blur(12px)"
+          }}
+        >
+          <div style={{
+            width: 56, height: 56, borderRadius: 16, flexShrink: 0,
+            background: "#fef3c7", border: "1.5px solid #fcd34d",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 26
+          }}>⚡</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+              <p style={{ color: "#fcd34d", fontWeight: 800, fontSize: "1.05rem" }}>Personal Mode</p>
+              <span style={{ background: "rgba(252,211,77,.15)", color: "#fcd34d", fontSize: ".65rem", fontWeight: 800, padding: "2px 7px", borderRadius: 20, border: "1px solid rgba(252,211,77,.3)" }}>PERSONAL ACCOUNT</span>
+            </div>
+            <p style={{ color: "rgba(255,255,255,.5)", fontSize: ".83rem", lineHeight: 1.4 }}>
+              Take attendance independently — no school account needed
+            </p>
+          </div>
+          <span style={{ color: "rgba(255,255,255,.3)", fontSize: "1.2rem", flexShrink: 0 }}>→</span>
+        </Link>
 
         <style>{`
           .role-card { transition: background .2s, border-color .2s, transform .15s; }

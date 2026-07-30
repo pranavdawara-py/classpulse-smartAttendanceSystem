@@ -55,7 +55,7 @@ export default async function TeacherHomePage() {
             Good {getGreeting()}, {name.split(" ")[0]} 👋
           </h1>
           <p style={{ color: "#64748b", fontSize: ".95rem" }}>
-            Today&apos;s lectures and attendance actions are below.
+            Record attendance with live camera or upload a class video.
           </p>
         </div>
 
@@ -63,7 +63,7 @@ export default async function TeacherHomePage() {
         <div className="card" style={{
           padding: "28px 28px",
           background: "linear-gradient(135deg,#6d4aff 0%,#8b5cf6 100%)",
-          border: "none", marginBottom: 24
+          border: "none", marginBottom: 16
         }}>
           <p style={{ color: "rgba(255,255,255,.7)", fontSize: ".8rem", fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 8 }}>
             Quick action
@@ -72,30 +72,56 @@ export default async function TeacherHomePage() {
             Record attendance
           </h2>
           <p style={{ color: "rgba(255,255,255,.75)", fontSize: ".9rem", marginBottom: 20 }}>
-            Select a lecture, scan the room with your camera or upload a video, then review and confirm.
+            Select a batch, scan the room with your camera or upload a video, then review and confirm.
           </p>
-          <button
+          <a
+            href="/teacher/attendance/new"
             id="start-attendance-btn"
-            disabled
             style={{
+              display: "inline-block",
               background: "white", color: "#6d4aff",
               border: "none", borderRadius: 12, padding: "12px 22px",
-              fontWeight: 800, cursor: "not-allowed", opacity: .7,
-              fontSize: ".95rem"
+              fontWeight: 800, fontSize: ".95rem", textDecoration: "none"
             }}
           >
-            📷 Start attendance — coming soon
-          </button>
+            📷 Start attendance
+          </a>
         </div>
 
-        {/* Today&apos;s schedule placeholder */}
+        {/* History quick-link */}
+        <a href="/teacher/attendance/history" style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "14px 18px", borderRadius: 14,
+          background: "#fafbfd", border: "1.5px solid #e7edf5",
+          textDecoration: "none", marginBottom: 28,
+          transition: "border-color .15s"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 22 }}>📋</span>
+            <div>
+              <p style={{ fontWeight: 700, color: "#172033", fontSize: ".9rem", marginBottom: 1 }}>View attendance history</p>
+              <p style={{ color: "#64748b", fontSize: ".78rem" }}>All sessions · filter by date or batch</p>
+            </div>
+          </div>
+          <span style={{ color: "#94a3b8", fontSize: 18 }}>→</span>
+        </a>
+
+        {/* Tips */}
         <div style={{ marginBottom: 16 }}>
-          <h2 style={{ fontSize: "1.1rem", fontWeight: 800, marginBottom: 16 }}>Today&apos;s schedule</h2>
-          <EmptyState
-            icon="📅"
-            title="No lectures scheduled yet"
-            body="Once your schedule is set up by the administrator, your upcoming lectures will appear here."
-          />
+          <h2 style={{ fontSize: "1rem", fontWeight: 800, marginBottom: 12 }}>How it works</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
+            {[
+              { icon: "📷", step: "1", title: "Open camera", body: "Use live camera or upload a class recording" },
+              { icon: "🤖", step: "2", title: "AI scans faces", body: "Faces recognised automatically; unknowns flagged" },
+              { icon: "✅", step: "3", title: "Review & confirm", body: "Correct any mistakes, then save to cloud" },
+            ].map(t => (
+              <div key={t.step} className="card" style={{ padding: "16px", textAlign: "center" }}>
+                <div style={{ fontSize: 28, marginBottom: 8 }}>{t.icon}</div>
+                <p style={{ fontWeight: 800, fontSize: ".83rem", marginBottom: 4 }}>{t.title}</p>
+                <p style={{ color: "#64748b", fontSize: ".73rem", lineHeight: 1.4 }}>{t.body}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </main>
     </div>

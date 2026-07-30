@@ -4,22 +4,19 @@ import { createClient } from "@/lib/supabase/server";
 /**
  * Handles Supabase email-confirmation redirects (PKCE flow).
  *
- * Supabase sends the user here after they click the verification link in their email.
- * The URL contains a `code` query param which is exchanged for a session.
+ * For school signups: runs bootstrap_institution + sets location.
+ * For personal accounts: skips school bootstrap, reads `next` param to redirect.
  *
- * For school signups, the school name and timezone were stored in user_metadata
- * at signUp() time. We call bootstrap_institution() here once the session exists.
- *
- * Required: add http://localhost:3000/auth/callback to Supabase
- * Authentication → URL Configuration → Redirect URLs.
- * Add the production URL too when deploying.
+ * Supports `?next=<path>` on the callback URL so signup forms can route users
+ * back to the right page after verification (e.g., /attend for Personal Mode).
  */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  // `next` lets callers send the user to a specific page after verification.
+  const next = searchParams.get("next") ?? "/dashboard";
 
   if (!code) {
-    // No code — corrupted or expired link.
     return NextResponse.redirect(`${origin}/login?error=invalid_link`);
   }
 
@@ -28,24 +25,22 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/login?error=not_configured`);
   }
 
-  // Exchange the one-time code for a persistent session.
   const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
   if (exchangeError) {
     console.error("[auth/callback] exchangeCodeForSession error:", exchangeError.message);
     return NextResponse.redirect(`${origin}/login?error=link_expired`);
   }
 
-  // Session is now established. Fetch the verified user.
   const { data: { user } } = await supabase.auth.getUser();
 
   if (user?.user_metadata?.school_name) {
-    const schoolName = user.user_metadata.school_name as string;
+    // ── School signup: bootstrap institution ─────────────────────────────────
+    const schoolName     = user.user_metadata.school_name as string;
     const schoolTimezone = (user.user_metadata.school_timezone as string) ?? "Asia/Kolkata";
-    const schoolCountry = (user.user_metadata.school_country as string) ?? "";
-    const schoolState   = (user.user_metadata.school_state   as string) ?? "";
-    const schoolCity    = (user.user_metadata.school_city    as string) ?? "";
+    const schoolCountry  = (user.user_metadata.school_country as string) ?? "";
+    const schoolState    = (user.user_metadata.school_state   as string) ?? "";
+    const schoolCity     = (user.user_metadata.school_city    as string) ?? "";
 
-    // Create institution + set admin role
     const { error: rpcError } = await supabase.rpc("bootstrap_institution", {
       institution_name: schoolName,
       institution_timezone: schoolTimezone
@@ -56,7 +51,6 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${origin}/login?error=bootstrap_failed`);
     }
 
-    // Set location if provided (optional fields — ignore errors)
     if (schoolCountry || schoolState || schoolCity) {
       await supabase.rpc("set_institution_location", {
         p_country: schoolCountry,
@@ -64,8 +58,14 @@ export async function GET(request: Request) {
         p_city:    schoolCity
       });
     }
+
+    // School users always go to dashboard → admin.
+    return NextResponse.redirect(`${origin}/dashboard`);
   }
 
-  // Redirect to dashboard — it will read the role and send the user to /admin, /teacher, etc.
-  return NextResponse.redirect(`${origin}/dashboard`);
+  // ── Personal account (no school_name): honour `next` param ───────────────
+  // Validate `next` to only allow same-origin relative paths.
+  const safePath = next.startsWith("/") ? next : "/attend";
+  return NextResponse.redirect(`${origin}${safePath}`);
 }
+

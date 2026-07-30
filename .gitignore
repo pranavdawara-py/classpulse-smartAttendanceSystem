@@ -18,3 +18,9 @@ storage/
 uploads/
 model-cache/
 *.log
+
+# PWA - Workbox generated service worker files (built at `next build` time)
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/workbox-*.js.map

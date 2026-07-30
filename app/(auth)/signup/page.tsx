@@ -56,7 +56,7 @@ export default function SignupPage() {
       const supabase = createClient();
       // Store school data in user metadata so the /auth/callback route can
       // call bootstrap_institution() after email confirmation.
-      const { error: authError } = await supabase.auth.signUp({
+      const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -71,6 +71,9 @@ export default function SignupPage() {
         }
       });
       if (authError) throw authError;
+      if (data?.user?.identities && data.user.identities.length === 0) {
+        throw new Error("already registered");
+      }
       setStep("verify");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Sign-up failed.";
