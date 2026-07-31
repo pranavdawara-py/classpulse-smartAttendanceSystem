@@ -1,5 +1,8 @@
 "use client";
 
+// useSearchParams() requires force-dynamic — prevents build-time prerender crash in Next.js 16
+export const dynamic = "force-dynamic";
+
 /**
  * Student login page.
  *
