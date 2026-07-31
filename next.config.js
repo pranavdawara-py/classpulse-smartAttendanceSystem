@@ -17,6 +17,10 @@ const nextConfig = {
     ]
   },
 
+  // Required for Next.js 16: next-pwa uses a webpack config internally.
+  // An empty turbopack config silences the "webpack config with no turbopack config" build error.
+  turbopack: {},
+
   // Extend headers for camera permissions (required for getUserMedia on Android Chrome)
   async headers() {
     return [
