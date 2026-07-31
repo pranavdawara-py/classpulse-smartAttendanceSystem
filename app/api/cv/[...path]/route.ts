@@ -38,8 +38,17 @@ async function proxy(req: NextRequest, params: { path: string[] }) {
   // Forward request to FastAPI
   const headers = new Headers();
   req.headers.forEach((value, key) => {
-    if (key.toLowerCase() !== "host") headers.set(key, value);
+    const normalizedKey = key.toLowerCase();
+    // Never trust a browser-supplied credential for the backend.
+    if (normalizedKey !== "host" && normalizedKey !== "authorization") {
+      headers.set(key, value);
+    }
   });
+
+  const backendApiKey = process.env.BACKEND_API_KEY;
+  if (backendApiKey) {
+    headers.set("Authorization", `Bearer ${backendApiKey}`);
+  }
 
   let body: BodyInit | null = null;
   const method = req.method.toUpperCase();
