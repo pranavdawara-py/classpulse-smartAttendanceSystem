@@ -2,10 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { RoleLoginForm } from "../_components/RoleLoginForm";
 
+// RoleLoginForm uses useSearchParams() — must opt out of static prerendering
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Teacher Sign In — ClassPulse",
   description: "Sign in to your ClassPulse teacher account to mark and manage attendance."
 };
+
 
 const ACCENT = "#0d9488";
 
