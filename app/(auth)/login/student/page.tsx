@@ -1,8 +1,5 @@
 "use client";
 
-// useSearchParams() requires force-dynamic — prevents build-time prerender crash in Next.js 16
-export const dynamic = "force-dynamic";
-
 /**
  * Student login page.
  *
@@ -16,7 +13,7 @@ export const dynamic = "force-dynamic";
  *   Standard email + password (for students who have real email addresses)
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -30,7 +27,7 @@ interface School {
   slug: string;
 }
 
-export default function StudentLoginPage() {
+function StudentLoginInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next") ?? "/student";
@@ -335,5 +332,15 @@ function Spinner() {
       <span style={{ width: 18, height: 18, border: "2.5px solid rgba(255,255,255,.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin .7s linear infinite", display: "inline-block" }} />
       Signing in…
     </span>
+  );
+}
+
+// useSearchParams() requires a Suspense boundary in Next.js App Router.
+// The inner component uses it; this wrapper satisfies the requirement.
+export default function StudentLoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <StudentLoginInner />
+    </Suspense>
   );
 }
