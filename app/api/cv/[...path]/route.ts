@@ -1,9 +1,9 @@
 /**
- * Next.js proxy for the ClassPulse CV backend (FastAPI on localhost:8000).
+ * Next.js proxy for the ClassPulse CV backend (FastAPI).
  * This avoids CORS issues when the browser talks to the Python backend.
  *
- * All requests to /api/cv/... are forwarded to http://localhost:8000/...
- * e.g. POST /api/cv/recognize → POST http://localhost:8000/recognize
+ * All requests to /api/cv/... are forwarded to the configured CV_BASE URL.
+ * e.g. POST /api/cv/recognize → POST {CV_BASE}/recognize
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -65,7 +65,7 @@ async function proxy(req: NextRequest, params: { path: string[] }) {
     });
   } catch {
     return NextResponse.json(
-      { error: "CV backend unreachable. Make sure start.bat is running." },
+      { error: "Face recognition service is temporarily unavailable. Please retry or use manual attendance." },
       { status: 503 }
     );
   }

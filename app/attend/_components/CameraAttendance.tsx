@@ -849,33 +849,31 @@ function BackendCard({ status, onDone }: { status: "checking" | "offline"; onDon
   if (status === "checking") {
     return (
       <div className="card" style={{ padding: "40px 24px", textAlign: "center" }}>
-        <span style={{ fontSize: 36 }}>🔍</span>
-        <p style={{ fontWeight: 700, color: "#334155", marginTop: 12 }}>Checking face recognition engine…</p>
+        <span style={{ display: "inline-block", width: 36, height: 36, border: "3px solid #6d4aff", borderTopColor: "transparent", borderRadius: "50%", animation: "spin .7s linear infinite", marginBottom: 16 }} />
+        <p style={{ fontWeight: 700, color: "#334155", marginTop: 4 }}>Starting face recognition…</p>
+        <p style={{ color: "#94a3b8", fontSize: ".82rem", marginTop: 6 }}>This takes a few seconds on first load.</p>
       </div>
     );
   }
   return (
-    <div className="card" style={{ padding: "36px 24px", textAlign: "center", border: "1.5px dashed #fcd34d", background: "#fffbeb" }}>
-      <div style={{ fontSize: 40, marginBottom: 12 }}>⚙️</div>
-      <h2 style={{ fontWeight: 800, marginBottom: 8 }}>Face recognition not running</h2>
-      <p style={{ color: "#78716c", fontSize: ".88rem", lineHeight: 1.6, marginBottom: 16, maxWidth: 380, margin: "0 auto 16px" }}>
-        Open <strong>Anaconda Prompt</strong>, go to the <code>backend/</code> folder and run:
+    <div className="card" style={{ padding: "36px 24px", textAlign: "center", border: "1.5px solid #e7edf5", background: "#fafbfd" }}>
+      <div style={{ fontSize: 40, marginBottom: 12 }}>📷</div>
+      <h2 style={{ fontWeight: 800, marginBottom: 8, fontSize: "1.1rem" }}>Camera AI is warming up</h2>
+      <p style={{ color: "#64748b", fontSize: ".88rem", lineHeight: 1.6, marginBottom: 20, maxWidth: 340, margin: "0 auto 20px" }}>
+        The face recognition engine may take up to 30 seconds to start.
+        You can wait and retry, or use manual roll call instead.
       </p>
-      <div style={{ background: "#1e1b2e", borderRadius: 12, padding: "12px 16px", textAlign: "left", marginBottom: 20, fontSize: ".82rem", color: "#c4b5fd", fontFamily: "monospace", display: "inline-block", minWidth: 280 }}>
-        <div style={{ color: "#64748b", marginBottom: 4 }}># Anaconda Prompt</div>
-        cd backend<br />
-        start.bat
-      </div>
       <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
         <button onClick={() => window.location.reload()} className="action" style={{ minHeight: 44 }}>
-          Retry
+          🔄 Retry
         </button>
         {onDone && (
           <button onClick={onDone} className="action action-secondary" style={{ minHeight: 44 }}>
-            Manual marking instead
+            ✏️ Manual roll call instead
           </button>
         )}
       </div>
     </div>
   );
 }
+
