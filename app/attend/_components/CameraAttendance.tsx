@@ -642,6 +642,26 @@ export default function CameraAttendance({
           )}
         </div>
 
+        {/* Live status bar — shows face detection counts when active */}
+        {isActive && lastFaces.length > 0 && (() => {
+          const matched  = lastFaces.filter(f => !f.is_spoof && f.student_id).length;
+          const unknown  = lastFaces.filter(f => !f.is_spoof && !f.student_id).length;
+          const spoofed  = lastFaces.filter(f => f.is_spoof).length;
+          return (
+            <div style={{
+              padding: "7px 16px", background: "#1e293b", display: "flex",
+              alignItems: "center", gap: 6, fontSize: ".78rem", fontWeight: 700, color: "white",
+              flexWrap: "wrap"
+            }}>
+              <span style={{ color: "#94a3b8" }}>📡</span>
+              <span>{lastFaces.length} face{lastFaces.length !== 1 ? "s" : ""} detected</span>
+              {matched > 0  && <><span style={{ color: "#94a3b8" }}>·</span><span style={{ color: "#4ade80" }}>✓ {matched} matched</span></>}
+              {unknown > 0  && <><span style={{ color: "#94a3b8" }}>·</span><span style={{ color: "#fbbf24" }}>? {unknown} unknown</span></>}
+              {spoofed > 0  && <><span style={{ color: "#94a3b8" }}>·</span><span style={{ color: "#f87171" }}>⚠ {spoofed} blocked</span></>}
+            </div>
+          );
+        })()}
+
         {/* Player */}
         <div style={{ position: "relative", background: "#080814", minHeight: 240 }}>
           {/* Camera error */}

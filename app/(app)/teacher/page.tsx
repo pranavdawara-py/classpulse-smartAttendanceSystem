@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getTodaySessions, type TodaySession } from "@/app/actions/teacher/attendance";
 
 export default async function TeacherHomePage() {
   const supabase = await createClient();
@@ -16,6 +17,7 @@ export default async function TeacherHomePage() {
     .single();
 
   const name = teacher?.full_name ?? user.email ?? "Teacher";
+  const todaySessions = await getTodaySessions();
 
   return (
     <div className="shell">
@@ -106,22 +108,60 @@ export default async function TeacherHomePage() {
           <span style={{ color: "#94a3b8", fontSize: 18 }}>→</span>
         </a>
 
-        {/* Tips */}
+        {/* Today's sessions or How it works tips */}
         <div style={{ marginBottom: 16 }}>
-          <h2 style={{ fontSize: "1rem", fontWeight: 800, marginBottom: 12 }}>How it works</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
-            {[
-              { icon: "📷", step: "1", title: "Open camera", body: "Use live camera or upload a class recording" },
-              { icon: "🤖", step: "2", title: "AI scans faces", body: "Faces recognised automatically; unknowns flagged" },
-              { icon: "✅", step: "3", title: "Review & confirm", body: "Correct any mistakes, then save to cloud" },
-            ].map(t => (
-              <div key={t.step} className="card" style={{ padding: "16px", textAlign: "center" }}>
-                <div style={{ fontSize: 28, marginBottom: 8 }}>{t.icon}</div>
-                <p style={{ fontWeight: 800, fontSize: ".83rem", marginBottom: 4 }}>{t.title}</p>
-                <p style={{ color: "#64748b", fontSize: ".73rem", lineHeight: 1.4 }}>{t.body}</p>
+          {todaySessions.length > 0 ? (
+            <>
+              <h2 style={{ fontSize: "1rem", fontWeight: 800, marginBottom: 12 }}>Today&apos;s sessions</h2>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {todaySessions.map((s: TodaySession) => {
+                  const time = new Date(s.started_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+                  const pct  = s.total_count > 0 ? Math.round((s.present_count / s.total_count) * 100) : 0;
+                  return (
+                    <div key={s.id} className="card" style={{ padding: "14px 18px", display: "flex", alignItems: "center", gap: 14 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 12, background: pct === 100 ? "#f0fdf4" : pct >= 75 ? "#fefce8" : "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "1.1rem" }}>
+                        {pct === 100 ? "✅" : pct >= 75 ? "🟡" : "🔴"}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontWeight: 700, fontSize: ".9rem", marginBottom: 2 }}>
+                          {s.label ?? (s.batch_name ? `${s.batch_name} session` : "Unnamed session")}
+                        </p>
+                        <p style={{ color: "#64748b", fontSize: ".77rem" }}>
+                          {time}{s.batch_name && ` · ${s.batch_name}`}
+                        </p>
+                      </div>
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        <p style={{ fontWeight: 800, fontSize: ".95rem", color: pct === 100 ? "#16a34a" : "#172033" }}>
+                          {s.present_count}<span style={{ color: "#94a3b8", fontWeight: 500 }}>/{s.total_count}</span>
+                        </p>
+                        <p style={{ color: "#94a3b8", fontSize: ".72rem" }}>present</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
+              <a href="/teacher/attendance/history" style={{ display: "block", textAlign: "center", marginTop: 12, fontSize: ".8rem", color: "#6d4aff", fontWeight: 700, textDecoration: "none" }}>
+                View full history →
+              </a>
+            </>
+          ) : (
+            <>
+              <h2 style={{ fontSize: "1rem", fontWeight: 800, marginBottom: 12 }}>How it works</h2>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
+                {[
+                  { icon: "📷", step: "1", title: "Open camera", body: "Use live camera or upload a class recording" },
+                  { icon: "🤖", step: "2", title: "AI scans faces", body: "Faces recognised automatically; unknowns flagged" },
+                  { icon: "✅", step: "3", title: "Review & confirm", body: "Correct any mistakes, then save to cloud" },
+                ].map(t => (
+                  <div key={t.step} className="card" style={{ padding: "16px", textAlign: "center" }}>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>{t.icon}</div>
+                    <p style={{ fontWeight: 800, fontSize: ".83rem", marginBottom: 4 }}>{t.title}</p>
+                    <p style={{ color: "#64748b", fontSize: ".73rem", lineHeight: 1.4 }}>{t.body}</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </main>
     </div>

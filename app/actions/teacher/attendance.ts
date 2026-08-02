@@ -171,3 +171,65 @@ export async function saveAttendanceSession(
   revalidatePath("/teacher");
   return { success: true, sessionId };
 }
+
+// ── Today's sessions (teacher dashboard) ─────────────────────────────────────
+
+export type TodaySession = {
+  id: string;
+  label: string | null;
+  batch_name: string | null;
+  started_at: string;
+  present_count: number;
+  total_count: number;
+};
+
+export async function getTodaySessions(): Promise<TodaySession[]> {
+  const ctx = await getCallerTeacherContext();
+  if (!ctx) return [];
+
+  const supabase = await createClient();
+  if (!supabase) return [];
+
+  // IST = UTC+5:30. Midnight IST = 18:30 UTC previous day.
+  const now      = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const istNow   = new Date(now.getTime() + istOffset);
+  const istMidnight = new Date(istNow);
+  istMidnight.setUTCHours(0, 0, 0, 0);
+  const utcMidnight = new Date(istMidnight.getTime() - istOffset);
+
+  const { data: sessions } = await supabase
+    .from("attendance_sessions")
+    .select(`
+      id, started_at, confirmed_at,
+      lectures!inner(
+        id, label, batch_id,
+        batches(name),
+        lecture_students(count)
+      ),
+      attendance_entries(status)
+    `)
+    .eq("institution_id", ctx.institutionId)
+    .eq("started_by", ctx.userId)
+    .gte("started_at", utcMidnight.toISOString())
+    .order("started_at", { ascending: false })
+    .limit(5);
+
+  if (!sessions) return [];
+
+  return sessions.map((s: Record<string, unknown>) => {
+    const lecture = s.lectures as Record<string, unknown> | null;
+    const entries = (s.attendance_entries as { status: string }[]) ?? [];
+    const lectureStudents = (lecture?.lecture_students as { count: number }[]) ?? [];
+    const totalCount = lectureStudents.reduce((sum, ls) => sum + (ls.count ?? 0), 0);
+    const batches = lecture?.batches as { name: string } | null;
+    return {
+      id:            s.id as string,
+      label:         (lecture?.label as string | null) ?? null,
+      batch_name:    batches?.name ?? null,
+      started_at:    (s.started_at ?? s.confirmed_at) as string,
+      present_count: entries.filter(e => e.status === "present").length,
+      total_count:   totalCount,
+    };
+  });
+}
