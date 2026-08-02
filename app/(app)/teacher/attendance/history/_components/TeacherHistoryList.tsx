@@ -6,6 +6,8 @@ interface AttendanceEntry {
   id: string;
   status: "present" | "absent";
   manually_changed: boolean;
+  student_name?: string | null;
+  roll_number?: string | null;
 }
 
 interface Lecture {
@@ -20,7 +22,8 @@ interface Session {
   id: string;
   input_mode: string;
   status: string;
-  confirmed_at: string;
+  confirmed_at: string | null;
+  started_at?: string | null;
   lectures: Lecture | null;
   attendance_entries: AttendanceEntry[];
 }
@@ -30,13 +33,20 @@ interface Props {
 }
 
 function downloadSessionCSV(session: Session) {
-  const label = session.lectures?.label || "attendance";
-  const date = new Date(session.confirmed_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  const label = session.lectures?.label || session.lectures?.batches?.name || "attendance";
+  const dateStr = session.confirmed_at ?? session.started_at ?? new Date().toISOString();
+  const date = new Date(dateStr).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
   const rows = [
-    ["Student #", "Status", "Manual Override"],
-    ...session.attendance_entries.map((e, i) => [`Student ${i + 1}`, e.status, e.manually_changed ? "Yes" : "No"])
+    ["#", "Student Name", "Roll No.", "Status", "Manual Override"],
+    ...session.attendance_entries.map((e, i) => [
+      String(i + 1),
+      e.student_name ?? `Student ${i + 1}`,
+      e.roll_number ?? "",
+      e.status,
+      e.manually_changed ? "Yes" : "No"
+    ])
   ];
-  const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -112,7 +122,8 @@ export default function TeacherHistoryList({ sessions }: Props) {
           const pct      = total > 0 ? Math.round((presentN / total) * 100) : 0;
           const isOpen   = expanded.has(session.id);
           const lec      = session.lectures;
-          const confirmedDate = new Date(session.confirmed_at);
+          const sessionDate = new Date(session.confirmed_at ?? session.started_at ?? Date.now());
+          const isValidDate = !isNaN(sessionDate.getTime());
 
           return (
             <div key={session.id} className="card" style={{ padding: 0, overflow: "hidden" }}>
@@ -140,8 +151,9 @@ export default function TeacherHistoryList({ sessions }: Props) {
                     )}
                   </p>
                   <p style={{ color: "#64748b", fontSize: ".78rem" }}>
-                    {confirmedDate.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}
-                    {" · "}{confirmedDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                    {isValidDate
+                      ? sessionDate.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" }) + " · " + sessionDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
+                      : "Date unknown"}
                     <span style={{ marginLeft: 8, opacity: .7 }}>{inputModeLabel(session.input_mode)}</span>
                   </p>
                 </div>

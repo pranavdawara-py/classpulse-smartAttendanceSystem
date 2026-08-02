@@ -99,8 +99,24 @@ export default async function StudentPage() {
     : "#dc2626";
 
   return (
-    <main className="page">
-      {/* Header */}
+    <div className="shell">
+      {/* Nav bar */}
+      <nav className="nav" style={{ padding: "0 20px" }}>
+        <div style={{ maxWidth: 1180, margin: "0 auto", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ width: 32, height: 32, borderRadius: 9, background: "linear-gradient(135deg,#6d4aff,#c849f4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</span>
+            <span style={{ fontWeight: 800, fontSize: "1.05rem", color: "#172033" }}>ClassPulse</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: ".82rem", color: "#64748b", fontWeight: 600 }}>{displayName.split(" ")[0]}</span>
+            <form action="/api/auth/signout" method="POST">
+              <button type="submit" style={{ background: "none", border: "1px solid #e7edf5", borderRadius: 10, padding: "6px 14px", cursor: "pointer", fontSize: ".82rem", color: "#64748b", fontWeight: 600 }}>Sign out</button>
+            </form>
+          </div>
+        </div>
+      </nav>
+      <main className="page">
+      {/* Profile header */}
       <div style={{ marginBottom: 28 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20, flexWrap: "wrap" }}>
           <div style={{ width: 56, height: 56, borderRadius: "50%", background: "linear-gradient(135deg,#2563eb,#6366f1)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 900, fontSize: "1.3rem", flexShrink: 0 }}>
@@ -115,13 +131,6 @@ export default async function StudentPage() {
               <p style={{ color: "#94a3b8", fontSize: ".82rem", marginTop: 2 }}>Student ID: {rollNumber}</p>
             )}
           </div>
-
-          {/* Sign out */}
-          <form action="/api/auth/signout" method="POST" style={{ marginLeft: "auto" }}>
-            <button type="submit" style={{ background: "none", border: "1px solid #e2e8f0", borderRadius: 10, padding: "8px 16px", cursor: "pointer", color: "#64748b", fontWeight: 600, fontSize: ".83rem" }}>
-              Sign out
-            </button>
-          </form>
         </div>
       </div>
 
@@ -249,6 +258,7 @@ export default async function StudentPage() {
           />
         </div>
       )}
-    </main>
+      </main>
+    </div>
   );
 }
