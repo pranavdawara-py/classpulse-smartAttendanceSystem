@@ -425,7 +425,7 @@ export default function AddStudentPanel({ onDone, onCancel }: Props) {
           <div style={{ background: "white", borderRadius: 20, width: "100%", maxWidth: 640, padding: "24px", boxShadow: "0 24px 60px rgba(0,0,0,.25)" }}>
             <ZipImportPanel
               mode="personal"
-              onImport={async (students: ParsedStudent[], onProgress) => {
+              onImport={async (students: ParsedStudent[], _password, onProgress) => {
                 let created = 0;
                 const errors: string[] = [];
                 const BATCH = 5;

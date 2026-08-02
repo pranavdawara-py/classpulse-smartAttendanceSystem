@@ -13,6 +13,7 @@ export default function SchoolZipImport({ onDone }: Props) {
 
   async function handleImport(
     students: ParsedStudent[],
+    password: string,
     onProgress: (done: number, total: number, name: string) => void
   ): Promise<{ created: number; errors: string[] }> {
     // Process in batches of 5 to avoid timeouts
@@ -23,7 +24,7 @@ export default function SchoolZipImport({ onDone }: Props) {
     for (let i = 0; i < students.length; i += BATCH) {
       const batch = students.slice(i, i + BATCH);
       onProgress(i, students.length, batch[0]?.name ?? "");
-      const res = await importStudentsFromZip(batch);
+      const res = await importStudentsFromZip(batch, password);
       allCreated += res.created;
       allErrors.push(...res.errors);
     }

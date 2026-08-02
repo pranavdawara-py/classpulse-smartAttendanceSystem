@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { listStudents, listBatches } from "@/app/actions/admin/students";
 import AddStudentForm from "./_components/AddStudentForm";
 import SchoolZipImport from "./_components/SchoolZipImport";
+import StudentPhotosDialog from "./_components/StudentPhotosDialog";
 
 export default async function StudentsPage() {
   const supabase = await createClient();
@@ -102,6 +103,7 @@ export default async function StudentsPage() {
                         )}
                       </div>
                     </div>
+                    <StudentPhotosDialog studentId={s.profile_id} studentName={s.full_name} />
                   </div>
                 );
               })}

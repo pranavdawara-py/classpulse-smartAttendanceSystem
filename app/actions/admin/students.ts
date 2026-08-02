@@ -197,10 +197,14 @@ export async function listStudents(institutionId: string) {
 // ── School ZIP import ─────────────────────────────────────────────────────────
 
 export async function importStudentsFromZip(
-  students: ParsedStudent[]
+  students: ParsedStudent[],
+  defaultPassword: string
 ): Promise<{ created: number; errors: string[] }> {
   const ctx = await getCallerAdminContext();
   if (!ctx) return { created: 0, errors: ["Not authorised."] };
+  if (defaultPassword.length < 8) {
+    return { created: 0, errors: ["Password must be at least 8 characters."] };
+  }
 
   const admin = createAdminClient();
   if (!admin) return { created: 0, errors: ["Server not configured."] };
@@ -219,7 +223,7 @@ export async function importStudentsFromZip(
       // Create auth user
       const { data: userData, error: userErr } = await admin.auth.admin.createUser({
         email,
-        password:      Math.random().toString(36).slice(-10), // temp password — admin should set via UI
+        password:      defaultPassword,
         email_confirm: true,
         user_metadata: { display_name: s.name }
       });
@@ -295,4 +299,77 @@ export async function importStudentsFromZip(
 
   revalidatePath("/admin/students");
   return { created, errors };
+}
+
+type AdminStudentPhoto = {
+  id: string;
+  image_path: string;
+  school_locked: boolean;
+  uploaded_by_role: "school" | "student" | null;
+  created_at: string;
+  signed_url: string;
+};
+
+/** Return signed face-photo URLs only when the caller administers the student's institution. */
+export async function getStudentPhotosAdmin(studentId: string): Promise<AdminStudentPhoto[]> {
+  const ctx = await getCallerAdminContext();
+  if (!ctx) return [];
+
+  const admin = createAdminClient();
+  if (!admin) return [];
+
+  const { data: photos, error } = await admin
+    .from("face_enrolments")
+    .select("id, image_path, school_locked, uploaded_by_role, created_at")
+    .eq("student_id", studentId)
+    .eq("institution_id", ctx.institutionId)
+    .order("created_at");
+
+  if (error || !photos?.length) return [];
+
+  const paths = photos.map(photo => photo.image_path);
+  const { data: signedUrls } = await admin.storage
+    .from("standalone-photos")
+    .createSignedUrls(paths, 3600);
+  const signedUrlByPath = new Map((signedUrls ?? []).map(item => [item.path, item.signedUrl ?? ""]));
+
+  return photos.map(photo => ({
+    id: photo.id,
+    image_path: photo.image_path,
+    school_locked: photo.school_locked,
+    uploaded_by_role: photo.uploaded_by_role as "school" | "student" | null,
+    created_at: photo.created_at,
+    signed_url: signedUrlByPath.get(photo.image_path) ?? "",
+  }));
+}
+
+/** Update a photo lock only after confirming it belongs to the caller's institution. */
+export async function togglePhotoLock(
+  photoId: string,
+  locked: boolean
+): Promise<{ error?: string; success?: boolean }> {
+  const ctx = await getCallerAdminContext();
+  if (!ctx) return { error: "Not authorised." };
+
+  const admin = createAdminClient();
+  if (!admin) return { error: "Server not configured." };
+
+  const { data: photo, error: photoError } = await admin
+    .from("face_enrolments")
+    .select("id")
+    .eq("id", photoId)
+    .eq("institution_id", ctx.institutionId)
+    .maybeSingle();
+  if (photoError || !photo) return { error: "Photo not found." };
+
+  const { error: updateError } = await admin
+    .from("face_enrolments")
+    .update({ school_locked: locked })
+    .eq("id", photoId)
+    .eq("institution_id", ctx.institutionId);
+  if (updateError) return { error: updateError.message };
+
+  revalidatePath("/admin/students");
+  revalidatePath("/student");
+  return { success: true };
 }

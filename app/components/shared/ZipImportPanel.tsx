@@ -28,6 +28,7 @@ interface Props {
    *  { created, errors }. Progress is reported via onProgress. */
   onImport: (
     students: ParsedStudent[],
+    password: string,
     onProgress: (done: number, total: number, currentName: string) => void
   ) => Promise<{ created: number; errors: string[] }>;
   onCancel: () => void;
@@ -43,6 +44,11 @@ interface DuplicateResolution {
   keep: "all" | number; // "all" = keep all with suffix; number = index to keep
 }
 
+interface CredentialStudent {
+  name: string;
+  loginId: string;
+}
+
 export default function ZipImportPanel({ mode, onImport, onCancel }: Props) {
   const [screen, setScreen]             = useState<Screen>("pick");
   const [parseResult, setParseResult]   = useState<ParseResult | null>(null);
@@ -51,6 +57,10 @@ export default function ZipImportPanel({ mode, onImport, onCancel }: Props) {
   const [progress, setProgress]         = useState({ done: 0, total: 0, name: "" });
   const [importResult, setImportResult] = useState<{ created: number; errors: string[] } | null>(null);
   const [parseError, setParseError]     = useState<string | null>(null);
+  const [defaultPassword, setDefaultPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [credentialStudents, setCredentialStudents] = useState<CredentialStudent[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // ── File selection ─────────────────────────────────────────────────────────
@@ -131,15 +141,44 @@ export default function ZipImportPanel({ mode, onImport, onCancel }: Props) {
     const students = getFinalStudents();
     if (!students.length) return;
 
+    if (mode === "school" && defaultPassword.length < 8) {
+      setPasswordError("Password must be at least 8 characters.");
+      return;
+    }
+
+    setPasswordError(null);
+    setCredentialStudents(students.map(student => ({
+      name: student.name,
+      loginId: student.rollNumber || student.name.toLowerCase().replace(/\s+/g, "."),
+    })));
+
     setScreen("uploading");
     setProgress({ done: 0, total: students.length, name: students[0].name });
 
-    const result = await onImport(students, (done, total, name) => {
+    const result = await onImport(students, mode === "school" ? defaultPassword : "", (done, total, name) => {
       setProgress({ done, total, name });
     });
 
     setImportResult(result);
     setScreen("done");
+  }
+
+  function downloadCredentials() {
+    const escapeCsv = (value: string) => `"${value.replace(/"/g, '""')}"`;
+    const csvContent = [
+      "Student Name,Student ID (Login),Temporary Password",
+      ...credentialStudents.map(student => [
+        escapeCsv(student.name),
+        escapeCsv(student.loginId),
+        escapeCsv(defaultPassword),
+      ].join(",")),
+    ].join("\n");
+    const url = URL.createObjectURL(new Blob([csvContent], { type: "text/csv" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "student-credentials.csv";
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -342,12 +381,51 @@ export default function ZipImportPanel({ mode, onImport, onCancel }: Props) {
           </div>
         )}
 
+        {mode === "school" && (
+          <div style={{ marginBottom: 16 }}>
+            <label htmlFor="zip-import-password" style={{ display: "block", fontWeight: 700, fontSize: ".85rem", color: "#334155", marginBottom: 7 }}>
+              Temporary password for all imported students
+            </label>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                id="zip-import-password"
+                type={showPassword ? "text" : "password"}
+                value={defaultPassword}
+                onChange={event => {
+                  setDefaultPassword(event.target.value);
+                  if (event.target.value.length >= 8) setPasswordError(null);
+                }}
+                placeholder="Enter temporary password (min 8 characters)"
+                minLength={8}
+                aria-describedby="zip-import-password-note"
+                style={{ flex: 1, minHeight: 44, borderRadius: 10, border: `1.5px solid ${passwordError ? "#fca5a5" : "#dbe3ef"}`, padding: "0 12px", fontSize: ".88rem", fontFamily: "inherit", outline: "none" }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(value => !value)}
+                aria-label={showPassword ? "Hide temporary password" : "Show temporary password"}
+                style={{ minHeight: 44, padding: "0 13px", borderRadius: 10, border: "1px solid #dbe3ef", background: "#f8fafc", color: "#475569", fontWeight: 700, cursor: "pointer", fontSize: ".78rem" }}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+            <p id="zip-import-password-note" style={{ color: "#64748b", fontSize: ".75rem", marginTop: 7, lineHeight: 1.4 }}>
+              All imported students will use this password. You can print credentials after import.
+            </p>
+            {(passwordError || (defaultPassword.length > 0 && defaultPassword.length < 8)) && (
+              <p style={{ color: "#dc2626", fontSize: ".75rem", fontWeight: 600, marginTop: 5 }}>
+                {passwordError ?? "Password must be at least 8 characters."}
+              </p>
+            )}
+          </div>
+        )}
+
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={() => setScreen("pick")} className="action action-secondary" style={{ flex: "0 0 auto", minHeight: 48, padding: "0 18px" }}>
             ← Back
           </button>
-          <button onClick={handleImport} className="action" disabled={finalStudents.length === 0}
-            style={{ flex: 1, minHeight: 48, background: "linear-gradient(135deg,#f59e0b,#d97706)" }}>
+          <button onClick={handleImport} className="action" disabled={finalStudents.length === 0 || (mode === "school" && defaultPassword.length < 8)}
+            style={{ flex: 1, minHeight: 48, background: finalStudents.length === 0 || (mode === "school" && defaultPassword.length < 8) ? "#e2e8f0" : "linear-gradient(135deg,#f59e0b,#d97706)", color: finalStudents.length === 0 || (mode === "school" && defaultPassword.length < 8) ? "#94a3b8" : "white" }}>
             Import {finalStudents.length} student{finalStudents.length !== 1 ? "s" : ""} →
           </button>
         </div>
@@ -394,6 +472,16 @@ export default function ZipImportPanel({ mode, onImport, onCancel }: Props) {
           {importResult.errors.length > 5 && (
             <p style={{ color: "#92400e", fontSize: ".75rem", marginTop: 4 }}>…and {importResult.errors.length - 5} more</p>
           )}
+        </div>
+      )}
+      {mode === "school" && importResult.created > 0 && (
+        <div style={{ marginBottom: 18 }}>
+          <button onClick={downloadCredentials} className="action action-secondary" style={{ minHeight: 46, padding: "0 22px" }}>
+            Download Credentials
+          </button>
+          <p style={{ color: "#92400e", fontSize: ".75rem", lineHeight: 1.45, maxWidth: 390, margin: "10px auto 0" }}>
+            Store this file securely. Delete after distributing credentials to students.
+          </p>
         </div>
       )}
       <button onClick={onCancel} className="action"

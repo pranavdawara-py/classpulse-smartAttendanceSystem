@@ -166,13 +166,13 @@ export default function AddStudentForm({ batches: initialBatches }: Props) {
           <div style={{ background: "white", borderRadius: 20, width: "100%", maxWidth: 640, padding: "24px", boxShadow: "0 24px 60px rgba(0,0,0,.25)" }}>
             <ZipImportPanel
               mode="school"
-              onImport={async (students: ParsedStudent[], onProgress) => {
+              onImport={async (students: ParsedStudent[], password, onProgress) => {
                 let created = 0;
                 const errors: string[] = [];
                 // School mode: process one at a time (each needs its own auth account)
                 for (let i = 0; i < students.length; i++) {
                   onProgress(i, students.length, students[i].name);
-                  const res = await importStudentsFromZip([students[i]]);
+                  const res = await importStudentsFromZip([students[i]], password);
                   created += res.created;
                   errors.push(...res.errors);
                 }
