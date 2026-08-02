@@ -191,12 +191,24 @@ export default function AttendanceWizard({ batches, students, institutionId, pho
                       <p style={{ fontWeight: 700, fontSize: ".9rem", marginBottom: 1 }}>{s.full_name}</p>
                       {s.roll_number && <p style={{ color: "#94a3b8", fontSize: ".75rem" }}>#{s.roll_number}</p>}
                     </div>
-                    <button
-                      onClick={() => setAttendance(prev => ({ ...prev, [s.profile_id]: present ? "absent" : "present" }))}
-                      style={{ padding: "6px 16px", borderRadius: 20, fontWeight: 700, fontSize: ".8rem", cursor: "pointer", background: present ? "#22c55e" : "#f1f5f9", color: present ? "white" : "#64748b", border: `1.5px solid ${present ? "#16a34a" : "#cbd5e1"}` }}
-                    >
-                      {present ? "Present ✓" : "Absent"}
-                    </button>
+                    <div style={{ display: "flex", gap: 6, flex: "0 0 230px", maxWidth: "100%" }}>
+                      <button
+                        type="button"
+                        onClick={() => setAttendance(prev => ({ ...prev, [s.profile_id]: "present" }))}
+                        aria-pressed={present}
+                        style={{ flex: 1, minHeight: 50, borderRadius: 12, fontWeight: 800, fontSize: ".85rem", cursor: "pointer", background: present ? "#22c55e" : "#f0fdf4", color: present ? "white" : "#166534", border: present ? "1.5px solid #16a34a" : "1.5px solid #bbf7d0" }}
+                      >
+                        ✓ Present
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAttendance(prev => ({ ...prev, [s.profile_id]: "absent" }))}
+                        aria-pressed={!present}
+                        style={{ flex: 1, minHeight: 50, borderRadius: 12, fontWeight: 800, fontSize: ".85rem", cursor: "pointer", background: present ? "#fef2f2" : "#ef4444", color: present ? "#991b1b" : "white", border: present ? "1.5px solid #fecaca" : "1.5px solid #dc2626" }}
+                      >
+                        ✗ Absent
+                      </button>
+                    </div>
                   </div>
                 );
               })}
