@@ -4,6 +4,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getAttendanceFormData } from "@/app/actions/teacher/attendance";
 import AttendanceWizard from "./_components/AttendanceWizard";
 
+export const metadata = {
+  title: "Take Attendance — ClassPulse",
+  description: "Mark attendance using camera face recognition or manual roll call.",
+};
+
 export default async function NewAttendancePage() {
   const supabase = await createClient();
   if (!supabase) redirect("/login");

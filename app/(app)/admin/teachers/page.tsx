@@ -3,6 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { listTeachers } from "@/app/actions/admin/teachers";
 import InviteTeacherForm from "./_components/InviteTeacherForm";
 
+export const metadata = {
+  title: "Teachers — ClassPulse Admin",
+  description: "Invite and manage teacher accounts for your school.",
+};
+
 export default async function TeachersPage() {
   const supabase = await createClient();
   if (!supabase) redirect("/login");

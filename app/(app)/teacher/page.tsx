@@ -2,6 +2,11 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getTodaySessions, type TodaySession } from "@/app/actions/teacher/attendance";
 
+export const metadata = {
+  title: "Teacher Dashboard — ClassPulse",
+  description: "Take attendance, view today's sessions, and manage your class records.",
+};
+
 export default async function TeacherHomePage() {
   const supabase = await createClient();
   if (!supabase) redirect("/login");

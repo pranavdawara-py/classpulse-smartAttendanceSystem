@@ -10,7 +10,10 @@ export default function AppError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("App boundary caught error:", error);
+    // Only log in dev — never expose to users
+    if (process.env.NODE_ENV === "development") {
+      console.error("App boundary caught error:", error);
+    }
   }, [error]);
 
   return (
@@ -21,7 +24,7 @@ export default function AppError({
           Something went wrong
         </h2>
         <p style={{ color: "#64748b", fontSize: "0.93rem", lineHeight: 1.6, marginBottom: 24 }}>
-          {error.message || "An unexpected error occurred while loading this page."}
+          An unexpected error occurred. Please try again or go back to the home screen.
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
           <button onClick={() => window.location.href = "/"} className="action action-secondary">

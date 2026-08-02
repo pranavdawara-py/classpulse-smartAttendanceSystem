@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#172033",
+  themeColor: "#6d4aff",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   icons: {
     apple: "/icons/icon-192.png"
   },
-  // No robots indexing for the MVP (school data app)
+  // No robots indexing (school data app — not intended for search engines)
   robots: { index: false, follow: false }
 };
 
