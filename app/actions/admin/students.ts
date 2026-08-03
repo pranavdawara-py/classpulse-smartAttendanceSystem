@@ -132,12 +132,18 @@ export async function createStudent(
 
   const studentId = userData.user.id;
 
-  // Update profiles row (created by trigger with role=unassigned) to role=student.
-  await admin.from("profiles").update({
-    role: "student",
+  // UPSERT profile — handles edge case where trigger hasn't created the row yet.
+  const { error: profileErr } = await admin.from("profiles").upsert({
+    id:             studentId,
+    email:          email,
+    role:           "student",
     institution_id: ctx.institutionId,
-    display_name: fullName
-  }).eq("id", studentId);
+    display_name:   fullName
+  }, { onConflict: "id" });
+  if (profileErr) {
+    await admin.auth.admin.deleteUser(studentId);
+    return { error: profileErr.message };
+  }
 
   // Insert student_profiles.
   const { error: spErr } = await admin.from("student_profiles").insert({
@@ -231,11 +237,19 @@ export async function importStudentsFromZip(
 
       const studentId = userData.user.id;
 
-      await admin.from("profiles").update({
-        role: "student",
+      // UPSERT profile — handles edge case where trigger hasn't created the row yet.
+      const { error: profileErr } = await admin.from("profiles").upsert({
+        id:             studentId,
+        email:          email,
+        role:           "student",
         institution_id: ctx.institutionId,
-        display_name: s.name
-      }).eq("id", studentId);
+        display_name:   s.name
+      }, { onConflict: "id" });
+      if (profileErr) {
+        await admin.auth.admin.deleteUser(studentId);
+        errors.push(`${s.name}: ${profileErr.message}`);
+        continue;
+      }
 
       const { error: spErr } = await admin.from("student_profiles").insert({
         profile_id:     studentId,

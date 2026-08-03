@@ -56,25 +56,27 @@ export async function inviteTeacher(
   }
 
   // Step 2 — regardless of whether invite or pre-existing, look up the user.
-  const teacherId = invite?.user?.id;
-  if (!teacherId) {
-    // Fallback: look up by email using admin list.
+  // teacherId comes from the invite response; fall back to listUsers if already registered.
+  let resolvedId = invite?.user?.id;
+  if (!resolvedId) {
     const { data: listData } = await admin.auth.admin.listUsers();
     const found = listData?.users.find(u => u.email === email);
     if (!found) return { error: "Could not locate user after invite. Try again." };
+    resolvedId = found.id;
   }
-
-  const resolvedId = teacherId ?? (
-    (await admin.auth.admin.listUsers()).data?.users.find(u => u.email === email)?.id
-  );
   if (!resolvedId) return { error: "Could not resolve user ID." };
 
-  // Step 3 — update profiles + insert teacher_profiles (service role bypasses RLS).
-  await admin.from("profiles").update({
-    role: "teacher",
+  // Step 3 — UPSERT profile (covers both new invite and pre-existing user).
+  // Using upsert instead of update to handle the edge case where the
+  // on_auth_user_created trigger hasn't created the profile row yet.
+  const { error: profileErr } = await admin.from("profiles").upsert({
+    id:             resolvedId,
+    email:          email,
+    role:           "teacher",
     institution_id: ctx.institutionId,
-    display_name: fullName
-  }).eq("id", resolvedId);
+    display_name:   fullName
+  }, { onConflict: "id" });
+  if (profileErr) return { error: profileErr.message };
 
   const { error: tpErr } = await admin.from("teacher_profiles").upsert({
     profile_id:     resolvedId,
